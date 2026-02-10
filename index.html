@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para mi Chuyita...</title>
+    <style>
+        body { 
+            text-align: center; font-family: 'Arial', sans-serif; background-color: #ffebee; 
+            margin: 0; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; height: 100vh; overflow: hidden;
+        }
+        #contenedor { 
+            background: white; padding: 25px; border-radius: 20px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); width: 350px; 
+            position: relative; z-index: 10;
+        }
+        h1 { font-size: 28px; color: #d32f2f; margin-bottom: 15px; }
+        canvas { background: #fffafb; border-radius: 10px; display: block; margin: 0 auto; }
+        .botones { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 8px; border: none; transition: 0.2s; }
+        #btnSi { background-color: #ff4081; color: white; font-weight: bold; }
+        #btnNo { background-color: #bdbdbd; color: white; }
+
+        /* Lluvia de corazones final */
+        .corazon-flotante {
+           position: absolute;
+    bottom: -10vh;
+    background: #ff4081;
+    width: 20px;
+    height: 20px;
+    transform: rotate(45deg);
+    animation: flotar 4s linear forwards;
+    opacity: 0;
+    z-index: 1; /* Para que salgan por detrás del cuadro blanco */
+        }
+        .corazon-flotante::before, .corazon-flotante::after {
+            content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ff4081;}
+        .corazon-flotante::before { top: -10px; left: 0; }
+        .corazon-flotante::after { top: 0; left: -10px; }
+        @keyframes flotar {
+            0% { transform: translateY(0) rotate(45deg) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(45deg) scale(1.2); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="contenedor">
+        <h1 id="pregunta">¿Esta doctora tan hermosa quiere ser mi San Valentín? ❤️</h1>
+        <canvas id="canvasCorazon" width="300" height="300"></canvas>
+        <div class="botones">
+            <button id="btnSi" onclick="aceptar()">¡Sí!</button>
+            <button id="btnNo" onclick="bucleNo()">No</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvasCorazon');
+        const ctx = canvas.getContext('2d');
+        let t = 0;
+        const escala = 6; 
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2 + 10;
+        let lastX, lastY;
+
+        ctx.strokeStyle = "#d81b60";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+
+        function animarCorazon() {
+            // Ecuación del corazón
+            const x = centerX + escala * (16 * Math.pow(Math.sin(t), 3));
+            const y = centerY - escala * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+
+            if (t === 0) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+
+            t += 0.05;
+
+            if (t <= Math.PI * 2) {
+                requestAnimationFrame(animarCorazon);
+            } else {
+                // Cerramos el trazo al final para que no haya huecos
+                ctx.closePath();
+                ctx.stroke();
+                dibujarIniciales();
+            }
+        }
+
+       
+        // Iniciamos el dibujo
+        animarCorazon();
+
+        // --- LÓGICA DE BOTONES (El SÍ tapa al NO) ---
+        let intentos = 0;
+        const frases = ["¿Estás segura?", "¿De verdad?", "Porque sigues presionando que no? :(", "Piénsalo bien...",  "Podemos hacer esto todo el dia...", "Anda ya presiona que si"];
+
+        function bucleNo() {
+            intentos++;
+            document.getElementById('pregunta').innerText = frases[intentos % frases.length];
+            
+            // El botón SÍ crece agresivamente para tapar al NO
+            let escalaSi = 1 + (intentos * 0.6);
+            document.getElementById('btnSi').style.transform = `scale(${escalaSi})`;
+            
+            // El botón NO se hace transparente
+            let opacidadNo = 1 - (intentos * 0.2);
+            document.getElementById('btnNo').style.opacity = opacidadNo > 0 ? opacidadNo : 0;
+        }
+
+        function aceptar() {
+          document.getElementById('pregunta').innerText = "Sabía que dirías que sí, así que te espero este sábado... Te quiero tanto mi doctorcita ❤️";
+    document.querySelector('.botones').style.display = 'none';
+    
+    // CAMBIO IMPORTANTE: Usamos el ID correcto del canvas
+    const dibujo = document.getElementById('canvasCorazon');
+    if (dibujo) dibujo.style.display = 'none';
+    
+    // Iniciamos la lluvia cada 300 milisegundos
+    setInterval(crearCorazonFlotante, 300);
+        }
+
+        function crearCorazonFlotante() {
+            const corazon = document.createElement('div');
+            corazon.classList.add('corazon-flotante');
+            corazon.style.animationDuration = Math.random() * 2 + 3 + 's';
+            corazon.style.left = Math.random() * 100 + 'vw';
+            document.body.appendChild(corazon);
+            setTimeout(() => { corazon.remove(); }, 5000);
+        }
+    </script>
+</body>
+</html>
